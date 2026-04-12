@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard Stok Pro</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+  <!-- CHART -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- EXCEL -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px;
+      background: #1e293b;
+      flex-wrap: wrap;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      padding: 15px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 15px;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: none;
+      background: #0f172a;
+      color: white;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: white;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      flex: 1;
+      background: #3b82f6;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    @media(max-width: 768px){
+      .container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  📊 Dashboard Stok PRO
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Tambah Barang</h3>
+    <input id="nama" placeholder="Nama">
+    <input id="jumlah" type="number" placeholder="Jumlah">
+    <input id="harga" type="number" placeholder="Harga">
+    <button class="btn" onclick="tambahBarang()">Simpan</button>
+  </div>
+
+  <div class="card">
+    <h3>Data Barang</h3>
+
+    <div class="stats">
+      <div class="stat" id="totalBarang">0</div>
+      <div class="stat" id="totalStok">0</div>
+      <div class="stat" id="totalUang">Rp 0</div>
+    </div>
+
+    <canvas id="myChart"></canvas>
+
+    <button class="btn" onclick="exportExcel()">📊 Export Excel PRO</button>
+
+    <input id="search" placeholder="Cari..." onkeyup="getBarang()">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Jumlah</th>
+          <th>Harga</th>
+          <th>Total</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBarang"></tbody>
+    </table>
+
+  </div>
+
+</div>
+
+<script>
+if (!localStorage.getItem("login")) location.href="login.html";
+
+const API = "http://localhost:3000/barang";
+let editId = null;
+let chart;
+
+function logout(){
+  localStorage.removeItem("login");
+  location.href="login.html";
+}
+
+async function getBarang(){
+  const res = await fetch(API);
+  const data = await res.json();
+
+  const table = document.getElementById("tableBarang");
+  table.innerHTML="";
+
+  let totalStok=0, totalBarang=0, totalUang=0;
+  let labels=[], values=[];
+
+  const search = document.getElementById("search").value.toLowerCase();
+
+  data.forEach(item=>{
+    if(!item.nama.toLowerCase().includes(search)) return;
+
+    const total = item.jumlah * item.harga;
+
+    totalStok += item.jumlah;
+    totalBarang++;
+    totalUang += total;
+
+    labels.push(item.nama);
+    values.push(item.jumlah);
+
+    table.innerHTML += `
+    <tr>
+      <td>${item.nama}</td>
+      <td>${item.jumlah}</td>
+      <td>Rp ${item.harga}</td>
+      <td>Rp ${total}</td>
+      <td>
+        <button onclick="editBarang('${item._id}','${item.nama}',${item.jumlah},${item.harga})">Edit</button>
+        <button onclick="hapusBarang('${item._id}')">Hapus</button>
+      </td>
+    </tr>`;
+  });
+
+  document.getElementById("totalBarang").innerText = totalBarang + " Item";
+  document.getElementById("totalStok").innerText = totalStok + " Stok";
+  document.getElementById("totalUang").innerText = "Rp " + totalUang;
+
+  updateChart(labels, values);
+}
+
+function updateChart(labels,data){
+  const ctx=document.getElementById("myChart");
+  if(chart) chart.destroy();
+
+  chart=new Chart(ctx,{
+    type:"bar",
+    data:{labels,datasets:[{label:"Stok",data}]}
+  });
+}
+
+async function tambahBarang(){
+  const nama=nama.value;
+  const jumlah=+document.getElementById("jumlah").value;
+  const harga=+document.getElementById("harga").value;
+
+  if(editId){
+    await fetch(API+"/"+editId,{
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({nama,jumlah,harga})
+    });
+    editId=null;
+  }else{
+    await fetch(API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({nama,jumlah,harga})
+    });
+  }
+
+  getBarang();
+}
+
+function editBarang(id,n,j,h){
+  nama.value=n;
+  jumlah.value=j;
+  harga.value=h;
+  editId=id;
+}
+
+async function hapusBarang(id){
+  await fetch(API+"/"+id,{method:"DELETE"});
+  getBarang();
+}
+
+async function exportExcel(){
+  const res = await fetch(API);
+  const data = await res.json();
+
+  const excel = data.map(i=>({
+    Nama:i.nama,
+    Jumlah:i.jumlah,
+    Harga:i.harga,
+    Total:i.jumlah*i.harga
+  }));
+
+  const ws=XLSX.utils.json_to_sheet(excel);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Stok");
+
+  XLSX.writeFile(wb,"stok_pro.xlsx");
+}
+
+getBarang();
+</script>
+
+</body>
+</html>
