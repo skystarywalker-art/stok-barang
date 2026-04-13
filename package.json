@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +17,12 @@
     "express": "^5.2.1",
     "mongoose": "^9.4.1"
   },
-  "devDependencies": {}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skystarywalker-art/stok-barang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skystarywalker-art/stok-barang/issues"
+  },
+  "homepage": "https://github.com/skystarywalker-art/stok-barang#readme"
 }

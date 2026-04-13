@@ -1,266 +1,320 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard Stok Pro</title>
+  <title>StokApp Pro</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- FONT -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-
-  <!-- CHART -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- EXCEL -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background: #0f172a;
+      background: linear-gradient(135deg, #0f172a, #020617);
       color: white;
+      display: flex;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px;
-      background: #1e293b;
-      flex-wrap: wrap;
+    .sidebar {
+      width: 230px;
+      height: 100vh;
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-right: 1px solid rgba(255,255,255,0.1);
     }
 
-    .container {
-      display: flex;
-      gap: 20px;
-      padding: 15px;
-      flex-wrap: wrap;
+    .sidebar h2 { text-align:center; }
+
+    .sidebar a {
+      display:block;
+      padding:12px;
+      margin:10px 0;
+      color:white;
+      text-decoration:none;
+      border-radius:10px;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .main { flex:1; padding:20px; }
+
+    .cards {
+      display:flex;
+      gap:20px;
     }
 
     .card {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 15px;
-      flex: 1;
-      min-width: 300px;
+      flex:1;
+      background: rgba(255,255,255,0.05);
+      padding:20px;
+      border-radius:20px;
     }
 
     input, select {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 8px;
-      border: none;
-      background: #0f172a;
-      color: white;
+      padding:12px;
+      margin:5px;
+      border-radius:10px;
+      border:none;
+      background: rgba(255,255,255,0.1);
+      color:white;
     }
 
-    .btn {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      background: #22c55e;
-      color: white;
-      cursor: pointer;
-      margin-top: 5px;
+    select option {
+      background:#1e293b;
+      color:white;
     }
+
+    button {
+      padding:12px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    .blue { background:#3b82f6; }
+    .red { background:#ef4444; }
+    .yellow { background:#f59e0b; }
+    .green { background:#22c55e; }
 
     table {
-      width: 100%;
-      margin-top: 10px;
-      font-size: 14px;
+      width:100%;
+      margin-top:20px;
+      border-collapse:collapse;
+      background: rgba(255,255,255,0.05);
+      border-radius:15px;
+      overflow:hidden;
     }
 
-    .stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    th, td {
+      padding:14px;
+      text-align:center;
     }
 
-    .stat {
-      flex: 1;
-      background: #3b82f6;
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-      min-width: 120px;
-    }
+    th { background: rgba(255,255,255,0.1); }
 
-    @media(max-width: 768px){
-      .container {
-        flex-direction: column;
-      }
+    tr:hover { background: rgba(255,255,255,0.08); }
+
+    .badge {
+      padding:6px 14px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:600;
+      display:inline-block;
+      color:white;
     }
   </style>
 </head>
 
 <body>
 
-<div class="header">
-  📊 Dashboard Stok PRO
-  <button onclick="logout()">Logout</button>
+<div class="sidebar">
+  <h2>🚀 StokApp</h2>
+  <a href="#">Dashboard</a>
+  <a href="#" onclick="logout()">Logout</a>
 </div>
 
-<div class="container">
+<div class="main">
 
-  <div class="card">
-    <h3>Tambah Barang</h3>
-    <input id="nama" placeholder="Nama">
+  <h2>Dashboard</h2>
+
+  <div class="cards">
+    <div class="card"><h3>Total Barang</h3><h2 id="totalBarang">0</h2></div>
+    <div class="card"><h3>Total Stok</h3><h2 id="totalStok">0</h2></div>
+    <div class="card"><h3>Total Nilai</h3><h2 id="totalNilai">0</h2></div>
+  </div>
+
+  <div>
+    <input id="nama" placeholder="Nama Barang">
     <input id="jumlah" type="number" placeholder="Jumlah">
     <input id="harga" type="number" placeholder="Harga">
-    <button class="btn" onclick="tambahBarang()">Simpan</button>
+    <input id="divisi" placeholder="Divisi">
+    <button class="blue" onclick="tambahBarang()">Tambah</button>
+    <button class="green" onclick="exportExcel()">Export Excel</button>
   </div>
 
-  <div class="card">
-    <h3>Data Barang</h3>
-
-    <div class="stats">
-      <div class="stat" id="totalBarang">0</div>
-      <div class="stat" id="totalStok">0</div>
-      <div class="stat" id="totalUang">Rp 0</div>
-    </div>
-
-    <canvas id="myChart"></canvas>
-
-    <button class="btn" onclick="exportExcel()">📊 Export Excel PRO</button>
-
-    <input id="search" placeholder="Cari..." onkeyup="getBarang()">
-
-    <table>
-      <thead>
-        <tr>
-          <th>Nama</th>
-          <th>Jumlah</th>
-          <th>Harga</th>
-          <th>Total</th>
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="tableBarang"></tbody>
-    </table>
-
+  <div>
+    <input id="search" placeholder="Search..." oninput="getBarang()">
+    <select id="filterDivisi" onchange="getBarang()">
+      <option value="semua">Semua Divisi</option>
+    </select>
   </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Divisi</th>
+        <th>Nama</th>
+        <th>Jumlah</th>
+        <th>Harga</th>
+        <th>Total</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
 
 </div>
 
 <script>
-if (!localStorage.getItem("login")) location.href="login.html";
-
-const API = "http://localhost:3000/barang";
-let editId = null;
-let chart;
-
-function logout(){
-  localStorage.removeItem("login");
-  location.href="login.html";
+/* 🔐 PROTECT LOGIN */
+if (!localStorage.getItem("login")) {
+  window.location.href = "login.html";
 }
 
-async function getBarang(){
-  const res = await fetch(API);
-  const data = await res.json();
+const API="http://localhost:3000/barang";
+let semuaData=[];
 
-  const table = document.getElementById("tableBarang");
-  table.innerHTML="";
+/* 🎨 WARNA DIVISI */
+function getColor(divisi){
+  if(!divisi) return "#64748b";
 
-  let totalStok=0, totalBarang=0, totalUang=0;
-  let labels=[], values=[];
+  divisi = divisi.toLowerCase();
 
-  const search = document.getElementById("search").value.toLowerCase();
+  const colors = {
+    dapur: "#84cc16",
+    kasir: "#06b6d4",
+    mie: "#a855f7",
+    minuman: "#0ea5e9",
+    bakso: "#6366f1",
+    adonan: "#ec4899"
+  };
 
-  data.forEach(item=>{
-    if(!item.nama.toLowerCase().includes(search)) return;
-
-    const total = item.jumlah * item.harga;
-
-    totalStok += item.jumlah;
-    totalBarang++;
-    totalUang += total;
-
-    labels.push(item.nama);
-    values.push(item.jumlah);
-
-    table.innerHTML += `
-    <tr>
-      <td>${item.nama}</td>
-      <td>${item.jumlah}</td>
-      <td>Rp ${item.harga}</td>
-      <td>Rp ${total}</td>
-      <td>
-        <button onclick="editBarang('${item._id}','${item.nama}',${item.jumlah},${item.harga})">Edit</button>
-        <button onclick="hapusBarang('${item._id}')">Hapus</button>
-      </td>
-    </tr>`;
-  });
-
-  document.getElementById("totalBarang").innerText = totalBarang + " Item";
-  document.getElementById("totalStok").innerText = totalStok + " Stok";
-  document.getElementById("totalUang").innerText = "Rp " + totalUang;
-
-  updateChart(labels, values);
+  return colors[divisi] || generateColor(divisi);
 }
 
-function updateChart(labels,data){
-  const ctx=document.getElementById("myChart");
-  if(chart) chart.destroy();
-
-  chart=new Chart(ctx,{
-    type:"bar",
-    data:{labels,datasets:[{label:"Stok",data}]}
-  });
-}
-
-async function tambahBarang(){
-  const nama=nama.value;
-  const jumlah=+document.getElementById("jumlah").value;
-  const harga=+document.getElementById("harga").value;
-
-  if(editId){
-    await fetch(API+"/"+editId,{
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({nama,jumlah,harga})
-    });
-    editId=null;
-  }else{
-    await fetch(API,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({nama,jumlah,harga})
-    });
+function generateColor(str){
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
+  return `hsl(${hash % 360}, 70%, 55%)`;
+}
+
+/* 📦 GET DATA */
+async function getBarang(){
+  try {
+    const res=await fetch(API);
+    semuaData=await res.json();
+  } catch {
+    alert("Server error!");
+    return;
+  }
+
+  const search=document.getElementById("search").value.toLowerCase();
+  const filter=document.getElementById("filterDivisi").value;
+
+  let html="", stok=0, nilai=0;
+  const divisiSet=new Set();
+
+  semuaData.sort((a,b)=>(a.divisi||"").localeCompare(b.divisi||""));
+
+  semuaData.forEach(b=>{
+    divisiSet.add(b.divisi || "-");
+
+    const matchDivisi = (filter === "semua") || b.divisi === filter;
+    const matchSearch = !search || b.nama.toLowerCase().includes(search);
+
+    if(matchDivisi && matchSearch){
+      stok+=b.jumlah;
+      nilai+=b.jumlah*b.harga;
+
+      const warna = getColor(b.divisi);
+
+      html+=`
+      <tr>
+        <td><span class="badge" style="background:${warna}">${b.divisi || "-"}</span></td>
+        <td>${b.nama}</td>
+        <td>${b.jumlah}</td>
+        <td>${b.harga}</td>
+        <td>${b.jumlah*b.harga}</td>
+        <td>
+          <button class="yellow" onclick="editBarang('${b._id}','${b.nama}',${b.jumlah},${b.harga},'${b.divisi}')">Edit</button>
+          <button class="red" onclick="hapusBarang('${b._id}')">Hapus</button>
+        </td>
+      </tr>`;
+    }
+  });
+
+  list.innerHTML=html;
+  totalBarang.innerText=semuaData.length;
+  totalStok.innerText=stok;
+  totalNilai.innerText=nilai;
+
+  const select=document.getElementById("filterDivisi");
+  const currentValue = filter;
+
+  select.innerHTML=`<option value="semua">Semua Divisi</option>`;
+  [...divisiSet].sort().forEach(d=>{
+    select.innerHTML+=`<option value="${d}" ${currentValue===d?'selected':''}>${d}</option>`;
+  });
+}
+
+/* ➕ TAMBAH */
+async function tambahBarang(){
+  if(!nama.value || !jumlah.value || !harga.value){
+    alert("Isi semua data!");
+    return;
+  }
+
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      nama:nama.value,
+      jumlah:jumlah.value,
+      harga:harga.value,
+      divisi:divisi.value
+    })
+  });
+
+  nama.value="";
+  jumlah.value="";
+  harga.value="";
+  divisi.value="";
 
   getBarang();
 }
 
-function editBarang(id,n,j,h){
-  nama.value=n;
-  jumlah.value=j;
-  harga.value=h;
-  editId=id;
-}
-
+/* ❌ HAPUS */
 async function hapusBarang(id){
   await fetch(API+"/"+id,{method:"DELETE"});
   getBarang();
 }
 
-async function exportExcel(){
-  const res = await fetch(API);
-  const data = await res.json();
+/* ✏️ EDIT */
+function editBarang(id,n,j,h,d){
+  const namaBaru=prompt("Nama",n);
+  const jumlahBaru=prompt("Jumlah",j);
+  const hargaBaru=prompt("Harga",h);
+  const divisiBaru=prompt("Divisi",d);
 
-  const excel = data.map(i=>({
-    Nama:i.nama,
-    Jumlah:i.jumlah,
-    Harga:i.harga,
-    Total:i.jumlah*i.harga
-  }));
+  fetch(API+"/"+id,{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      nama:namaBaru,
+      jumlah:jumlahBaru,
+      harga:hargaBaru,
+      divisi:divisiBaru
+    })
+  }).then(getBarang);
+}
 
-  const ws=XLSX.utils.json_to_sheet(excel);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Stok");
+/* 📤 EXPORT */
+function exportExcel(){
+  const ws = XLSX.utils.json_to_sheet(semuaData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Data");
+  XLSX.writeFile(wb, "stok_barang.xlsx");
+}
 
-  XLSX.writeFile(wb,"stok_pro.xlsx");
+/* 🚪 LOGOUT */
+function logout(){
+  localStorage.removeItem("login");
+  location.href="login.html";
 }
 
 getBarang();

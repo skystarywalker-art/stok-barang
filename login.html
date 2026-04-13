@@ -1,54 +1,152 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login Admin</title>
+  <title>Login - StokApp</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
   <style>
     body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      background: #2c3e50;
-      font-family: Arial;
+      background: linear-gradient(135deg, #0f172a, #020617);
+      color: white;
     }
 
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      width: 300px;
-      text-align: center;
+    .login-container {
+      display: flex;
+      width: 800px;
+      height: 450px;
+      border-radius: 20px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .left {
+      flex: 1;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .left h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .left p {
+      opacity: 0.8;
+    }
+
+    .right {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .right h2 {
+      margin-bottom: 20px;
     }
 
     input {
-      width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      transition: 0.3s;
+      width: 100%;
+    }
+
+    input:focus {
+      box-shadow: 0 0 10px #3b82f6;
+    }
+
+    .password-box {
+      position: relative;
+    }
+
+    .toggle-eye {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
     }
 
     button {
-      width: 100%;
-      padding: 10px;
-      background: #27ae60;
-      color: white;
+      padding: 12px;
       border: none;
+      border-radius: 10px;
+      background: #3b82f6;
+      color: white;
       cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
     }
+
+    button:hover {
+      transform: scale(1.05);
+      background: #2563eb;
+    }
+
+    .error {
+      margin-top: 10px;
+      color: #ef4444;
+      font-size: 14px;
+      display: none;
+    }
+
   </style>
 </head>
+
 <body>
 
-<div class="login-box">
-  <h2>🔐 Login Admin</h2>
-  <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+<div class="login-container">
+
+  <!-- LEFT -->
+  <div class="left">
+    <h1>🚀 StokApp</h1>
+    <p>Inventory Management System</p>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <h2>Login Admin</h2>
+
+    <input type="text" id="username" placeholder="Username">
+
+    <!-- 🔥 PASSWORD + EYE -->
+    <div class="password-box">
+      <input type="password" id="password" placeholder="Password">
+      <span class="toggle-eye" onclick="togglePassword()">👁️</span>
+    </div>
+
+    <button onclick="login()">Login</button>
+
+    <div class="error" id="errorMsg">Username atau Password salah</div>
+  </div>
+
 </div>
 
 <script>
 async function login() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
+  const errorMsg = document.getElementById("errorMsg");
 
   try {
     const res = await fetch("http://localhost:3000/login", {
@@ -59,28 +157,32 @@ async function login() {
       body: JSON.stringify({ username, password })
     });
 
-    const text = await res.text();
-    console.log("Response:", text);
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      alert("Server error! Cek backend lo 🔥");
-      return;
-    }
+    const data = await res.json();
 
     if (data.success) {
       localStorage.setItem("login", "true");
-      alert("Login berhasil!");
       window.location.href = "index.html";
     } else {
-      alert("Login gagal!");
+      errorMsg.style.display = "block";
     }
 
   } catch (err) {
-    alert("Tidak bisa connect ke server!");
-    console.error(err);
+    errorMsg.innerText = "Server error";
+    errorMsg.style.display = "block";
+  }
+}
+
+// 🔥 TOGGLE PASSWORD
+function togglePassword(){
+  const pass = document.getElementById("password");
+  const icon = document.querySelector(".toggle-eye");
+
+  if(pass.type === "password"){
+    pass.type = "text";
+    icon.innerText = "🙈";
+  } else {
+    pass.type = "password";
+    icon.innerText = "👁️";
   }
 }
 </script>
