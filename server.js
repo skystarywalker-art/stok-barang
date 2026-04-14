@@ -6,6 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/",(req,res) => {
+  res.send("API StokApp jalan bang!")
+});
+
 
 // ================== CONNECT MONGODB ATLAS ==================
 mongoose.connect("mongodb://andraxx:BR2201@ac-muhen9m-shard-00-00.24ebqdt.mongodb.net:27017,ac-muhen9m-shard-00-01.24ebqdt.mongodb.net:27017,ac-muhen9m-shard-00-02.24ebqdt.mongodb.net:27017/?ssl=true&replicaSet=atlas-ghnhtj-shard-0&authSource=admin&appName=Cluster0")
