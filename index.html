@@ -286,7 +286,7 @@ async function tambahBarang(){
 
 /* ❌ HAPUS */
 async function hapusBarang(id){
-  await fetch(API+"/"+id,{method:"DELETE"});
+  await fetch(API+"?id=" +id,{method:"DELETE"});
   getBarang();
 }
 

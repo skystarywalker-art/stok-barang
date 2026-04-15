@@ -1,23 +1,14 @@
-const express = require("express");
-const cors = require("cors");
 const mongoose = require("mongoose");
 
-const app = express();
+let isConnected = false;
 
-app.use(cors());
-app.use(express.json());
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGO_URI);
+  isConnected = true;
+}
 
-// ROOT TEST
-app.get("/", (req, res) => {
-  res.send("API StokApp jalan bang!");
-});
-
-// CONNECT MONGO
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log("ERROR MONGO:", err));
-
-// SCHEMA
+// schema
 const BarangSchema = new mongoose.Schema({
   nama: String,
   jumlah: Number,
@@ -28,51 +19,41 @@ const BarangSchema = new mongoose.Schema({
   }
 });
 
-const Barang = mongoose.model("Barang", BarangSchema);
+const Barang = mongoose.models.Barang || mongoose.model("Barang", BarangSchema);
 
-// ================= ROUTES =================
+module.exports = async (req, res) => {
+  await connectDB();
 
-// ⚠️ PENTING: TANPA /api
+  try {
+    // GET
+    if (req.method === "GET") {
+      const data = await Barang.find();
+      return res.json(data);
+    }
 
-app.get("/barang", async (req, res) => {
-  const data = await Barang.find();
-  res.json(data);
-});
+    // POST
+    if (req.method === "POST") {
+      const barang = new Barang(req.body);
+      await barang.save();
+      return res.json({ message: "Barang ditambahkan" });
+    }
 
-app.post("/barang", async (req, res) => {
-  const { nama, jumlah, harga, divisi } = req.body;
+    // DELETE
+    if (req.method === "DELETE") {
+      const id = req.query.id;
+      await Barang.findByIdAndDelete(id);
+      return res.json({ message: "Barang dihapus" });
+    }
 
-  const barang = new Barang({ nama, jumlah, harga, divisi });
-  await barang.save();
+    // PUT
+    if (req.method === "PUT") {
+      const id = req.query.id;
+      await Barang.findByIdAndUpdate(id, req.body);
+      return res.json({ message: "Barang diupdate" });
+    }
 
-  res.json({ message: "Barang ditambahkan" });
-});
-
-app.delete("/barang/:id", async (req, res) => {
-  await Barang.findByIdAndDelete(req.params.id);
-  res.json({ message: "Barang dihapus" });
-});
-
-app.put("/barang/:id", async (req, res) => {
-  const { nama, jumlah, harga, divisi } = req.body;
-
-  await Barang.findByIdAndUpdate(req.params.id, {
-    nama, jumlah, harga, divisi
-  });
-
-  res.json({ message: "Barang diupdate" });
-});
-
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-
-  if (username === "andraxx" && password === "BR2201") {
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
+    res.status(405).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-});
-
-module.exports = (req, res) => {
-    return app(req, res);
 };
