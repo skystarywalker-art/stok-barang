@@ -12,12 +12,12 @@ app.get("/", (req, res) => {
   res.send("API StokApp jalan bang!");
 });
 
-// ================== CONNECT MONGODB ==================
+// CONNECT MONGO
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log("ERROR MONGO:", err));
 
-// ================== SCHEMA ==================
+// SCHEMA
 const BarangSchema = new mongoose.Schema({
   nama: String,
   jumlah: Number,
@@ -30,15 +30,15 @@ const BarangSchema = new mongoose.Schema({
 
 const Barang = mongoose.model("Barang", BarangSchema);
 
-// ================== ROUTES ==================
+// ================= ROUTES =================
 
-// GET
+// ⚠️ PENTING: TANPA /api
+
 app.get("/barang", async (req, res) => {
   const data = await Barang.find();
   res.json(data);
 });
 
-// POST
 app.post("/barang", async (req, res) => {
   const { nama, jumlah, harga, divisi } = req.body;
 
@@ -48,13 +48,11 @@ app.post("/barang", async (req, res) => {
   res.json({ message: "Barang ditambahkan" });
 });
 
-// DELETE
 app.delete("/barang/:id", async (req, res) => {
   await Barang.findByIdAndDelete(req.params.id);
   res.json({ message: "Barang dihapus" });
 });
 
-// UPDATE
 app.put("/barang/:id", async (req, res) => {
   const { nama, jumlah, harga, divisi } = req.body;
 
@@ -65,8 +63,7 @@ app.put("/barang/:id", async (req, res) => {
   res.json({ message: "Barang diupdate" });
 });
 
-// LOGIN
-app.post(/login", (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
   if (username === "andraxx" && password === "BR2201") {
@@ -76,5 +73,6 @@ app.post(/login", (req, res) => {
   }
 });
 
-// EXPORT WAJIB
-module.exports = app;
+module.exports = (req, res) => {
+    return app(req, res);
+};

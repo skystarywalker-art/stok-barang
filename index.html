@@ -164,7 +164,9 @@ if (!localStorage.getItem("login")) {
   window.location.href = "login.html";
 }
 
-const API="https://stok-barang-fawn.vercel.app/api/barang";
+/* 🔥 AUTO DOMAIN (BIAR GAK HARDCODE) */
+const API = window.location.origin + "/api/barang";
+
 let semuaData=[];
 
 /* 🎨 WARNA DIVISI */
@@ -190,16 +192,20 @@ function generateColor(str){
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return `hsl(${hash % 360}, 70%, 55%)`;
+  return `hsl(${Math.abs(hash % 360)}, 70%, 55%)`;
 }
 
 /* 📦 GET DATA */
 async function getBarang(){
   try {
-    const res=await fetch(API);
-    semuaData=await res.json();
-  } catch {
-    alert("Server error!");
+    const res = await fetch(API);
+
+    if (!res.ok) throw new Error("API error");
+
+    semuaData = await res.json();
+  } catch (err) {
+    console.log(err);
+    alert("Server error / API belum connect!");
     return;
   }
 
@@ -264,8 +270,8 @@ async function tambahBarang(){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       nama:nama.value,
-      jumlah:jumlah.value,
-      harga:harga.value,
+      jumlah:Number(jumlah.value),
+      harga:Number(harga.value),
       divisi:divisi.value
     })
   });
@@ -296,8 +302,8 @@ function editBarang(id,n,j,h,d){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       nama:namaBaru,
-      jumlah:jumlahBaru,
-      harga:hargaBaru,
+      jumlah:Number(jumlahBaru),
+      harga:Number(hargaBaru),
       divisi:divisiBaru
     })
   }).then(getBarang);
