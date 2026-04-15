@@ -159,13 +159,13 @@
 </div>
 
 <script>
-/* 🔐 PROTECT LOGIN */
-if (!localStorage.getItem("login")) {
+/* 🔐 PROTECT LOGIN (PAKAI TOKEN) */
+if (!localStorage.getItem("token")) {
   window.location.href = "login.html";
 }
 
-/* 🔥 AUTO DOMAIN (BIAR GAK HARDCODE) */
-const API = window.location.origin + "/api/barang";
+/* 🔥 AUTO DOMAIN */
+const API = "https://stok-barang-fawn.vercel.app/api/barang";
 
 let semuaData=[];
 
@@ -195,10 +195,24 @@ function generateColor(str){
   return `hsl(${Math.abs(hash % 360)}, 70%, 55%)`;
 }
 
+/* 🔑 HEADER AUTH */
+function authHeader(){
+  return {
+    "Authorization": "Bearer " + localStorage.getItem("token")
+  };
+}
+
 /* 📦 GET DATA */
 async function getBarang(){
   try {
-    const res = await fetch(API);
+    const res = await fetch(API, {
+      headers: authHeader()
+    });
+
+    if (res.status === 401) {
+      logout();
+      return;
+    }
 
     if (!res.ok) throw new Error("API error");
 
@@ -267,7 +281,10 @@ async function tambahBarang(){
 
   await fetch(API,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{
+      "Content-Type":"application/json",
+      ...authHeader()
+    },
     body:JSON.stringify({
       nama:nama.value,
       jumlah:Number(jumlah.value),
@@ -286,7 +303,11 @@ async function tambahBarang(){
 
 /* ❌ HAPUS */
 async function hapusBarang(id){
-  await fetch(API+"?id=" +id,{method:"DELETE"});
+  await fetch(API+"?id=" + id,{
+    method:"DELETE",
+    headers: authHeader()
+  });
+
   getBarang();
 }
 
@@ -297,9 +318,12 @@ function editBarang(id,n,j,h,d){
   const hargaBaru=prompt("Harga",h);
   const divisiBaru=prompt("Divisi",d);
 
-  fetch(API+"/"+id,{
+  fetch(API+"?id=" + id,{
     method:"PUT",
-    headers:{"Content-Type":"application/json"},
+    headers:{
+      "Content-Type":"application/json",
+      ...authHeader()
+    },
     body:JSON.stringify({
       nama:namaBaru,
       jumlah:Number(jumlahBaru),
@@ -319,8 +343,8 @@ function exportExcel(){
 
 /* 🚪 LOGOUT */
 function logout(){
-  localStorage.removeItem("login");
-  location.href="login.html";
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
 }
 
 getBarang();
